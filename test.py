@@ -74,15 +74,7 @@ nn.train(X,y)
 y_pred = nn.predict(X)
 
 
-
-colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k', 'w']
-
-# plot
-for i in range(0, len(X_new)):
-	plt.plot(X_new[i], y, '-o', label='true', color = colors[i])
-
-
-#plt.plot(X, y, '-o', label='true')
+plt.plot(X, y, '-o', label='true')
 plt.plot(X, y_pred, '-o', label='RBFNN')
 plt.legend()
  
