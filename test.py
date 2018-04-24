@@ -1,5 +1,3 @@
-import rbfnn as rbfnn
-
 import numpy as np
 import pandas as pd
 
