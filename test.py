@@ -53,24 +53,24 @@ plt.show()
 
 '''
 # sample inputs and add noise
-NUM_SAMPLES = 100
-X = np.random.uniform(0, 1.5, NUM_SAMPLES)
+NUM_SAMPLES = 200
+X = np.random.uniform(0, 2.5, NUM_SAMPLES)
 #print(X)
 X = np.sort(X, axis=0)
-noise = np.random.uniform(-0.1, 0.1, NUM_SAMPLES)
-y = -10*np.sin(2 * np.pi * X)  + noise
+noise = np.random.uniform(-1, 1, NUM_SAMPLES)
+y = 10*np.sin(2 * np.pi * X)  + noise
 
-n_clusters = 3
+n_clusters = 5
 kmeans = KMeans(n_clusters=n_clusters, n_init=30, random_state=0).fit(X.reshape(-1,1))
 
-c,s, X_new = rbfnn.prepare_data(X, kmeans.labels_, n_clusters, True)
+c,s = rbfnn.prepare_data(X, kmeans.labels_, n_clusters, single_std=True)
+print(c,s)
 
 # rbfnn
-nn = rbfnn.RBFNN(n_clusters, c, s, 200)
-nn.set_learning_rate(0.02)
+nn = rbfnn.RBFNN(n_clusters, c, s, 50)
 nn.train(X,y)
-y_pred = nn.predict(X)
 
+y_pred = nn.predict(X)
 
 plt.plot(X, y, '-o', label='true')
 plt.plot(X, y_pred, '-o', label='RBFNN')
@@ -78,5 +78,3 @@ plt.legend()
  
 #plt.tight_layout()
 plt.show()
-
-#print(rbf(2, 3, 2))
