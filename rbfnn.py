@@ -1,16 +1,25 @@
 import numpy as np 
+import sys
+# K-fold vs LOO vs random subsamples
+# gradient descent vs analytical
+# num of clusters
+# std deviation
+# learning rate
 
-# todo
-# - mogućnost da se koristi svuda ista standardna devijacija
-# - određivanje pogreške na testnom setu preko MSE za različite brojeve clustera, podjele datasetova, 
-#   metode određivanja težina, metode određivanja standardne devijacije, learning_rateove
-# - podjela dataseta na TT i TVT
 
+# ml algorithms
+from sklearn.cluster import KMeans
 
+# cross-validation
+from sklearn.model_selection import KFold
+
+# plotting lib
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
 
 class RBFNN:
-	def __init__(self, k, c, s, epochs=100, learning_rate=0.01):
+	def __init__(self, k, c, s, epochs=500, learning_rate=0.01):
 		# broj clustera tj. bases tj. gaussovih krivulja
 		self.k = k
 
@@ -34,9 +43,8 @@ class RBFNN:
 		# lista s matricama čiji su članovi svi biases u NN
 		self.biases = [[0]]
 
-	def feedforward(self, input): 
-		# input je lista, transponiranjem se dobije matrica n sa 1
-		inputs = np.matrix(input)
+	def feedforward(self, single_input):
+		inputs = np.matrix(single_input)
 
 		rbf_outputs = []
 
@@ -78,14 +86,37 @@ class RBFNN:
 			rbf_outputs = np.concatenate(rbf_outputs)
 			target_outputs = np.matrix(target_list)
 
-			a_inv = np.linalg.inv(rbf_outputs.T * rbf_outputs)
+			try:
+				a_inv = np.linalg.inv(rbf_outputs.T * rbf_outputs)
+
+			except:
+				#print(rbf_outputs.T * rbf_outputs)
+				print("Matrix singular.", flush=True)
+				return False
 
 			w = a_inv * rbf_outputs.T * target_outputs.T
 			self.weights = w.T
-
-		else:
-			print("Unknown training method. Please specify bp or an.")
+			return True
+			#print(self.weights.astype(int))
 			
+	def predict(self, input_list):	
+		y = []
+		for i in range(0, len(input_list)):
+			current_output = self.feedforward(input_list[i])
+			y.append(current_output[1][0,0])
+		return y
+
+		
+
+	def get_MSE(self, input_list, target_list):
+		y = []
+		for i in range(0, len(input_list)):
+			current_output = self.feedforward(input_list[i])
+			y.append(current_output[1][0,0])
+
+		mse = sum(np.square(target_list-y))/len(input_list)
+		
+		return mse
 
 	def set_learning_rate(self, lr):
 		self.learning_rate = lr
@@ -93,13 +124,6 @@ class RBFNN:
 	def update_std_deviation(self, s):
 		self.s = s
 
-	def predict(self, inputs):		
-		y = []
-		for i in range(0, len(inputs)):
-			current_output = self.feedforward(inputs[i])
-			y.append(current_output[1][0,0])
-
-		return y
 
 # activation function
 def rbf(x, c, s):
@@ -107,42 +131,82 @@ def rbf(x, c, s):
 	c = np.matrix(c)
 	return np.exp(-(np.square(np.linalg.norm(x-c))/(2*np.square(s))))
 
+
 def prepare_data(inputs, labels, num_clusters, single_std=False):
 	a = []
-	c = []
-	s = []
+	centers = []
+	stdds = []
 	for i in range(0, num_clusters):
 		a.append([])
 
 	for i in range(0, len(inputs)):
 		a[labels[i]].append(inputs[i])
 
-	distance_sum = 0
-	current_mean = []
-	for i in range(0, num_clusters):
-		current_mean = np.mean(a[i], axis=0)
-		c.append(current_mean)
-
-		if(not single_std):
-			distance_sum = 0
-
-			for j in range(0, len(a[i])):
-				distance_sum += np.square(np.linalg.norm(a[i][j]-current_mean))
-
-			s.append(np.sqrt(distance_sum/len(a[i])))
+	a = np.array(a)
+	for i in range(0, len(a)):
+		centers.append(np.mean(a[i], axis=0))
+		stdds.append(np.std(a[i], dtype='float64'))
 
 	if(single_std):
+		if(num_clusters<2):
+			raise ValueError('Single standard deviation needs at least 2 kernels.')
+
 		distances = []
-		sm_distances = []
-		for i in range(0, len(c)-1):
-			for j in range(i+1, len(c)):
-				distances.append(np.linalg.norm(c[i] - c[j]))
-		
-		for i in range(0, len(c)-1):
-			smallest = min(distances)
-			sm_distances.append(smallest)
-			distances.remove(smallest)
+		for i in range(0, len(centers)-1):
+			for j in range(i+1, len(centers)):
+				distances.append(np.linalg.norm(centers[i]-centers[j]))
 
-		s = [max(sm_distances)/np.sqrt(2*len(c))]
+		stdds = [max(distances)/np.sqrt(2*num_clusters)]
 
-	return c,s
+	return centers, stdds
+
+def plot(x, y, x_label, y_label, title):
+	plt.plot(x, y, '-o')
+	plt.suptitle(title, fontsize=12)
+	plt.xlabel(x_label)
+	plt.ylabel(y_label)
+	plt.show()
+
+def analyze(X_train_validate, X_test, y_train_validate, y_test, min_clusters, max_clusters, train_method, single_std):
+	MSEs = []
+	ca = []
+	min_clusters = min_clusters
+	max_clusters = max_clusters
+	for i in range(min_clusters, max_clusters+1):
+		print("\n\nClusters: " + str(i))
+
+		kf = KFold(n_splits=10, shuffle=True)
+		validation_MSEs = []
+
+		for train_index, test_index in kf.split(X_train_validate):
+
+			X_train, X_validate = X_train_validate[train_index], X_train_validate[test_index]
+			y_train, y_validate = y_train_validate[train_index], y_train_validate[test_index]
+
+			n_clusters = i
+			kmeans = KMeans(n_clusters=n_clusters).fit(X_train)
+
+			c,s = prepare_data(X_train, kmeans.labels_, n_clusters, single_std=single_std)
+
+			# rbfnn
+			nn = RBFNN(k=len(c), c=c, s=s)
+			nn.train(X_train, y_train, method=train_method)
+
+			current_MSE = nn.get_MSE(X_validate, y_validate)
+
+			validation_MSEs.append(current_MSE)
+
+		validation_MSE = np.mean(validation_MSEs)
+		MSEs.append(validation_MSE)
+		ca.append(i)
+
+		if(validation_MSE > 5*np.mean(MSEs)):
+			MSEs.pop()
+			ca.pop()
+			print("K-Fold validation MSE: " + str(validation_MSE), flush=True)
+			return MSEs, ca
+
+		print("10 puta mean: " + str(np.mean(MSEs)))
+		print("K-Fold validation MSE: " + str(validation_MSE), flush=True)
+
+	return MSEs, ca
