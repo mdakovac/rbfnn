@@ -3,7 +3,3 @@ Dependencies:
 - scikitlearn
 - pandas
 - matplotlib
-
-<br>
-Upute:
-- pokrenuti test.py
