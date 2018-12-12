@@ -20,7 +20,7 @@ from mpl_toolkits.mplot3d import Axes3D
 
 class RBFNN:
 	def __init__(self, k, c, s, epochs=500, learning_rate=0.01):
-		# broj clustera tj. bases tj. gaussovih krivulja
+		# broj clustera tj. bases tj. gaussovih krivulja tj. kernels
 		self.k = k
 
 		# centroidi clustera
@@ -43,6 +43,7 @@ class RBFNN:
 		# lista s matricama čiji su članovi svi biases u NN
 		self.biases = [[0]]
 
+	# za jedan n-dimenzionalni input vraća outpute skrivenog i izlaznog sloja
 	def feedforward(self, single_input):
 		inputs = np.matrix(single_input)
 
@@ -62,7 +63,9 @@ class RBFNN:
 		outputs = [rbf_outputs, net_output]
 		return outputs
 
+	# trening - update težina i biasa
 	def train(self, input_list, target_list, method="an"):
+		# gradient descent metoda
 		if(method == "gd"):
 			for j in range(0, self.epochs):
 				for i in range(0, len(input_list)):
@@ -77,6 +80,9 @@ class RBFNN:
 					self.weights = np.subtract(self.weights, delta_w)
 					self.biases = np.subtract(self.biases, delta_b)
 
+		# analitička metoda po
+		# "Introduction to Radial Basis Function Networks", Mark J. L. Orr
+		# Centre for Cognitive Science, University of Edinburgh, April 1996., poglavlje 4.1. 
 		elif(method == "an"):
 			rbf_outputs = []
 			for i in range(0, len(input_list)):
@@ -99,6 +105,7 @@ class RBFNN:
 			return True
 			#print(self.weights.astype(int))
 			
+	# vraća n outputa mreže za n inputa
 	def predict(self, input_list):	
 		y = []
 		for i in range(0, len(input_list)):
@@ -106,8 +113,7 @@ class RBFNN:
 			y.append(current_output[1][0,0])
 		return y
 
-		
-
+	# vraća Mean Squared Error za n inputa 
 	def get_MSE(self, input_list, target_list):
 		y = []
 		for i in range(0, len(input_list)):
@@ -131,7 +137,7 @@ def rbf(x, c, s):
 	c = np.matrix(c)
 	return np.exp(-(np.square(np.linalg.norm(x-c))/(2*np.square(s))))
 
-
+# pripremanje podataka za mrežu - izračun širina i koordinata središta kernela
 def prepare_data(inputs, labels, num_clusters, single_std=False):
 	a = []
 	centers = []
