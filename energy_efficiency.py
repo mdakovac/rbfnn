@@ -61,7 +61,7 @@ for i in range(min_clusters, max_clusters+1):
 
 			c,s = rbfnn.prepare_data(X_train, kmeans.labels_, n_clusters, single_std=False)
 
-			for j in range(0,len(s)):
+			for j in range(0, len(s)):
 				s[j] = float(s[j])*q
 
 			# rbfnn

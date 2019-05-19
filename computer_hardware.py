@@ -71,7 +71,7 @@ for i in range(2, 25):
 	# testiranje možda ne valja
 	#print("Test subset MSE: " + str(nn.get_MSE(X_test, y_test)), flush=True)
 
-c = np.array_split(MSEs,3)
+c = np.array_split(MSEs, 3)
 print(c)
 
 plt.plot(clusters, c[0], '-o', label='q=1')
