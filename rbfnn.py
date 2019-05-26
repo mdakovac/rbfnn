@@ -13,6 +13,12 @@ from sklearn.cluster import KMeans
 # cross-validation
 from sklearn.model_selection import KFold
 
+# dataframe handling lib
+import pandas as pd
+
+# preprocessing
+from sklearn import preprocessing
+
 # plotting lib
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
@@ -110,7 +116,7 @@ class RBFNN:
 			self.weights = w.T
 
 		return True
-			
+
 	# vraća n outputa mreže za n inputa
 	def predict(self, input_list):	
 		y = []
@@ -129,12 +135,6 @@ class RBFNN:
 		mse = sum(np.square(target_list-y))/len(input_list)
 		
 		return mse
-
-	def set_learning_rate(self, lr):
-		self.learning_rate = lr
-
-	def update_std_deviation(self, s):
-		self.s = s
 
 
 # pripremanje podataka za mrežu - izračun širina i koordinata središta kernela
@@ -177,14 +177,15 @@ def prepare_data(inputs, labels, num_clusters, single_std=False):
 	return centers, stdds
 
 
-def analyze(X_train_validate, X_test, y_train_validate, y_test, min_clusters, max_clusters, train_method, single_std):
+def analyze(X_train_validate, X_test, y_train_validate, y_test, min_clusters, max_clusters, train_method, single_std, normalize=True, print_results=True):
 	validation_MSEs = []
 	test_MSEs = []
 	min_clusters = min_clusters
 	max_clusters = max_clusters
 
 	for i in range(min_clusters, max_clusters+1):
-		print("\n\nClusters: " + str(i))
+		if print_results:
+			print("\n\nClusters: " + str(i))
 
 		kf = KFold(n_splits=10, shuffle=True)
 		KFold_validation_MSEs = []
@@ -194,6 +195,11 @@ def analyze(X_train_validate, X_test, y_train_validate, y_test, min_clusters, ma
 
 			X_train, X_validate = X_train_validate[train_index], X_train_validate[test_index]
 			y_train, y_validate = y_train_validate[train_index], y_train_validate[test_index]
+
+			if normalize:
+				X_train, y_train = min_max_scale(X_train, y_train)
+				X_validate, y_validate = min_max_scale(X_validate, y_validate)
+				X_test, y_test = min_max_scale(X_test, y_test)
 
 			n_clusters = i
 			kmeans = KMeans(n_clusters=n_clusters).fit(X_train)
@@ -210,7 +216,26 @@ def analyze(X_train_validate, X_test, y_train_validate, y_test, min_clusters, ma
 		validation_MSEs.append(np.mean(KFold_validation_MSEs))
 		test_MSEs.append(np.mean(KFold_test_MSEs))
 
-		print("K-Fold validation MSE: " + str(np.mean(KFold_validation_MSEs)), flush=True)
-		print("K-Fold testing MSE: " + str(np.mean(KFold_test_MSEs)), flush=True)
+		if print_results:
+			print("K-Fold validation MSE: " + str(np.mean(KFold_validation_MSEs)), flush=True)
+			print("K-Fold testing MSE: " + str(np.mean(KFold_test_MSEs)), flush=True)
 
 	return validation_MSEs, test_MSEs
+
+
+def min_max_scale(x, y):
+	min_max_scaler = preprocessing.MinMaxScaler(feature_range=(0, 1))
+
+	x = min_max_scaler.fit_transform(x)
+
+	y = min_max_scaler.fit_transform(y.reshape(-1, 1))
+	y = y.reshape(1, -1)[0]
+
+	return x, y
+	'''
+	# normalizacija
+	X_train = np.array(X_train)
+	X_train = preprocessing.normalize(X_train)
+	X_train = pd.DataFrame(X_train)
+	'''
+
