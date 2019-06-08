@@ -30,7 +30,16 @@ min_clusters = 2
 max_clusters = 15
 cluster_range = range(min_clusters, max_clusters+1)
 
-validation_MSEs, test_MSEs = rbfnn.analyze(X_train_validate, X_test, y_train_validate, y_test, min_clusters, max_clusters, "an", 1, 1, 1)
+validation_MSEs, test_MSEs = rbfnn.analyze(X_train_validate,
+										   X_test,
+										   y_train_validate,
+										   y_test,
+										   min_clusters,
+										   max_clusters,
+										   train_method="an",
+										   single_std=1,
+										   normalize=0,
+										   print_results=1)
 
 
 # plot

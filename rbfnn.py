@@ -154,7 +154,7 @@ def prepare_data(inputs, labels, num_clusters, single_std=False):
 		stdds.append(np.std(a[i], dtype='float64'))
 
 	if single_std:
-		# experimental
+		# for sine test
 		'''
 		centers = np.sort(centers)
 

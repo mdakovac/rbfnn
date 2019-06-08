@@ -16,12 +16,13 @@ from sklearn.model_selection import train_test_split
 import sys
 
 # ucitaj dataset
-df = pd.read_csv('data/energy_efficiency.csv').astype(float)
+df = pd.read_csv('data/real_estate_valuation_data.csv').astype(float)
 
 
 # izdvoji ulaze i izlaze
-X = np.array(df[df.columns[0:8]])
-y = np.array(df[df.columns[9]])
+# ignore cols 4 and 5, all same values
+X = np.array(df[df.columns[0:6]])
+y = np.array(df[df.columns[6]])
 
 # cluster range
 min_clusters = 2
@@ -57,13 +58,12 @@ plt.plot(cluster_range, validation_MSEs1, label="single")
 plt.plot(cluster_range, validation_MSEs2, label="different")
 plt.xticks(cluster_range)
 
-plt.suptitle("Energy Efficiency", fontsize=12)
+plt.suptitle("Real Estate", fontsize=12)
 plt.xlabel("Number of kernels")
 plt.ylabel("MSE")
 
 plt.legend()
 plt.show()
-
 
 # export to excel
 excel_data = pd.DataFrame({'Kernels': cluster_range,
@@ -71,4 +71,5 @@ excel_data = pd.DataFrame({'Kernels': cluster_range,
 						   's testing MSE': test_MSEs1,
 						   'd validation MSE': validation_MSEs2,
 						   'd testing MSE': test_MSEs2})
-excel_data.to_excel('test.xlsx', sheet_name='sheet2', index=False)
+excel_data.to_excel('results/test.xlsx', sheet_name='sheet1', index=False)
+
