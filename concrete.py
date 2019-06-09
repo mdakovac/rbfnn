@@ -35,25 +35,12 @@ validation_MSEs1, test_MSEs1 = rbfnn.analyze(X_train_validate,
 										   min_clusters,
 										   max_clusters,
 										   train_method="an",
-										   single_std=1,
-										   normalize=1,
-										   print_results=0)
-
-X_train_validate, X_test, y_train_validate, y_test = train_test_split(X, y, test_size=0.25)
-validation_MSEs2, test_MSEs2 = rbfnn.analyze(X_train_validate,
-										   X_test,
-										   y_train_validate,
-										   y_test,
-										   min_clusters,
-										   max_clusters,
-										   train_method="an",
 										   single_std=0,
 										   normalize=1,
-										   print_results=0)
+										   print_results=1)
 
 # plot
 plt.plot(cluster_range, validation_MSEs1, label="single")
-plt.plot(cluster_range, validation_MSEs2, label="different")
 plt.xticks(cluster_range)
 
 plt.suptitle("Concrete", fontsize=12)
@@ -66,8 +53,6 @@ plt.show()
 # export to excel
 excel_data = pd.DataFrame({'Kernels': cluster_range,
 						   's validation MSE': validation_MSEs1,
-						   's testing MSE': test_MSEs1,
-						   'd validation MSE': validation_MSEs2,
-						   'd testing MSE': test_MSEs2})
-excel_data.to_excel('results/test.xlsx', sheet_name='sheet1', index=False)
+						   's testing MSE': test_MSEs1})
+excel_data.to_excel('results/test2.xlsx', sheet_name='sheet1', index=False)
 

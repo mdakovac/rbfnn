@@ -6,6 +6,7 @@ import sys
 # std deviation
 # learning rate
 
+import random
 
 # ml algorithms
 from sklearn.cluster import KMeans
@@ -22,6 +23,7 @@ from sklearn import preprocessing
 # plotting lib
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+from sklearn.neighbors import NearestNeighbors
 
 
 class RBFNN:
@@ -138,25 +140,23 @@ class RBFNN:
 
 
 # pripremanje podataka za mrežu - izračun širina i koordinata središta kernela
-def prepare_data(inputs, labels, num_clusters, single_std=False):
+def prepare_data(inputs, centers, single_std=False):
 	a = []
-	centers = []
+	num_clusters = len(centers)
 	stdds = []
-	for i in range(0, num_clusters):
-		a.append([])
 
-	for i in range(0, len(inputs)):
-		a[labels[i]].append(inputs[i])
-
-	a = np.array(a)
-	for i in range(0, len(a)):
-		centers.append(np.mean(a[i], axis=0))
-		stdds.append(np.std(a[i], dtype='float64'))
+	if not single_std:
+		for i in range(0, num_clusters):
+			p = 2
+			neigh = NearestNeighbors(n_neighbors=p)
+			neigh.fit(centers)
+			distances = neigh.kneighbors(centers[i].reshape(1, -1))[0][0]
+			stdds.append(np.sqrt(np.sum(np.square(distances)))/p)
 
 	if single_std:
-		# for sine test
 		'''
-		centers = np.sort(centers)
+		# for sine test
+		centers = np.sort(centers, axis=None)
 
 		distances = []
 		for i in range(0, len(centers)-1):
@@ -177,7 +177,7 @@ def prepare_data(inputs, labels, num_clusters, single_std=False):
 	return centers, stdds
 
 
-def analyze(X_train_validate, X_test, y_train_validate, y_test, min_clusters, max_clusters, train_method, single_std, normalize=True, print_results=True):
+def analyze(X_train_validate, X_test, y_train_validate, y_test, min_clusters, max_clusters, train_method, q, single_std=False, random_centers=False, normalize=True, print_results=True):
 	validation_MSEs = []
 	test_MSEs = []
 	min_clusters = min_clusters
@@ -192,7 +192,6 @@ def analyze(X_train_validate, X_test, y_train_validate, y_test, min_clusters, ma
 		KFold_test_MSEs = []
 
 		for train_index, test_index in kf.split(X_train_validate):
-
 			X_train, X_validate = X_train_validate[train_index], X_train_validate[test_index]
 			y_train, y_validate = y_train_validate[train_index], y_train_validate[test_index]
 
@@ -202,11 +201,20 @@ def analyze(X_train_validate, X_test, y_train_validate, y_test, min_clusters, ma
 				X_test, y_test = min_max_scale(X_test, y_test)
 
 			n_clusters = i
-			kmeans = KMeans(n_clusters=n_clusters).fit(X_train)
+			cluster_centers = []
+			if not random_centers:
+				kmeans = KMeans(n_clusters=n_clusters).fit(X_train)
+				cluster_centers = kmeans.cluster_centers_
+			else:
+				for j in range(0, i):
+					cluster_centers.append(random.choice(X_train))
 
-			c, s = prepare_data(X_train, kmeans.labels_, n_clusters, single_std=single_std)
+			cluster_centers = np.array(cluster_centers)
+			c, s = prepare_data(X_train, cluster_centers, single_std=single_std)
 
-			nn = RBFNN(k=len(c), c=c, s=s)
+			s = np.multiply(q, s, dtype=float)
+
+			nn = RBFNN(k=len(cluster_centers), c=cluster_centers, s=s)
 			if not nn.train(X_train, y_train, method=train_method):
 				continue
 

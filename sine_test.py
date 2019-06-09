@@ -11,16 +11,16 @@ import rbfnn as rbfnn
 
 
 # sample inputs and add noise
-NUM_SAMPLES = 800
+NUM_SAMPLES = 300
 X = np.random.uniform(0, 1.5, NUM_SAMPLES)
 # print(X)
 X = np.sort(X, axis=0)
-noise = np.random.uniform(-0.1, 0.1, NUM_SAMPLES)
+noise = np.random.uniform(-0.8, 0.8, NUM_SAMPLES)
 y = 3*np.sin(12*X) + noise
 # y = 15*X + nois#e
 X = X.reshape(-1, 1)
 
-
+'''
 # K-fold splitting
 X_train_validate, X_test, y_train_validate, y_test = train_test_split(X, y, shuffle=True, test_size=0.1)
 
@@ -57,21 +57,16 @@ plt.show()
 '''
 n_clusters = 6
 kmeans = KMeans(n_clusters=n_clusters).fit(X)
-#print(kmeans.cluster_centers_)
-c, s = rbfnn.prepare_data(X, kmeans.labels_, n_clusters, single_std=0)
 
-#print(c)
-#print(s)
-# print(kmeans.labels_)
+c, s = rbfnn.prepare_data(X, kmeans.cluster_centers_, single_std=0)
 
 # rbfnn
 q = 1
-scaleStd = False
-if scaleStd:
+if q != 1:
 	for i in range(0, len(s)):
 		s[i] = float(s[i])*q
 
-
+print(s)
 nn = rbfnn.RBFNN(k=n_clusters, c=c, s=s)
 nn.train(X, y, method="an")
 
@@ -84,4 +79,3 @@ plt.legend()
 
 # plt.tight_layout()
 plt.show()
-'''
