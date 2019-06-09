@@ -7,6 +7,7 @@ import sys
 # learning rate
 
 import random
+import math
 
 # ml algorithms
 from sklearn.cluster import KMeans
@@ -55,7 +56,12 @@ class RBFNN:
 	def rbf(self, x, c, s):
 		x = np.matrix(x)
 		c = np.matrix(c)
-		return np.exp(-(np.square(np.linalg.norm(x - c)) / (2 * np.square(s))))
+		output = np.exp(-(np.square(np.linalg.norm(x - c)) / (2 * np.square(s))))
+
+		if np.isnan(output):
+			print("shit")
+			sys.exit()
+		return output
 
 	# za jedan n-dimenzionalni input vraća outpute skrivenog i izlaznog sloja
 	def feedforward(self, single_input):
@@ -135,7 +141,7 @@ class RBFNN:
 			y.append(current_output[1][0, 0])
 
 		mse = sum(np.square(target_list-y))/len(input_list)
-		
+
 		return mse
 
 
@@ -150,7 +156,9 @@ def calculate_std(centers, single_std=False):
 			neigh = NearestNeighbors(n_neighbors=p)
 			neigh.fit(centers)
 			distances = neigh.kneighbors(centers[i].reshape(1, -1))[0][0]
-			stds.append(np.sqrt(np.sum(np.square(distances)))/p)
+			val = np.sqrt(np.sum(np.square(distances)))/p
+
+			stds.append(val)
 
 	if single_std:
 		'''
@@ -203,8 +211,7 @@ def analyze(X_train_validate, X_test, y_train_validate, y_test, min_clusters, ma
 				kmeans = KMeans(n_clusters=n_clusters).fit(X_train)
 				cluster_centers = kmeans.cluster_centers_
 			else:
-				for j in range(0, i):
-					cluster_centers.append(random.choice(X_train))
+				cluster_centers = random.sample(list(X_test), n_clusters)
 
 			cluster_centers = np.array(cluster_centers)
 			s = calculate_std(cluster_centers, single_std=single_std)
@@ -222,12 +229,11 @@ def analyze(X_train_validate, X_test, y_train_validate, y_test, min_clusters, ma
 		test_MSEs.append(np.mean(KFold_test_MSEs))
 
 		if print_results:
-			print("Clusters: " + str(i))
 			print("K-Fold validation MSE: " + str(np.mean(KFold_validation_MSEs)), flush=True)
 			print("K-Fold testing MSE: " + str(np.mean(KFold_test_MSEs)), flush=True)
-			print("\n")
 
 		print("Clusters: " + str(i) + ", q = " + str(q) + " -- done", flush=True)
+		print("\n")
 
 	return validation_MSEs, test_MSEs
 

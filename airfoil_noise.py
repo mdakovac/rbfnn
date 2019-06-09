@@ -45,12 +45,12 @@ for q in q:
 											   max_clusters,
 											   train_method="an",
 											   q=q,
-											   single_std=1,
-											   random_centers=0,
+											   single_std=0,
+											   random_centers=1,
 											   normalize=1,
-											   print_results=0)
+											   print_results=1)
 
-	plt.plot(cluster_range, validation_MSEs, label="q="+str(q))
+	plt.plot(cluster_range, validation_MSEs, label="q = "+str(q))
 	output_object["MSE q="+str(q)] = validation_MSEs
 
 # plot
@@ -67,4 +67,4 @@ plt.show()
 
 # export to excel
 excel_data = pd.DataFrame(output_object)
-excel_data.to_excel('results/airfoil_noise/single_std=1--random_centers=0.xlsx', sheet_name='sheet1', index=False)
+excel_data.to_excel('results/airfoil_noise/single_std=0--random_centers=1.xlsx', sheet_name='sheet1', index=False)
