@@ -140,10 +140,9 @@ class RBFNN:
 
 
 # pripremanje podataka za mrežu - izračun širina i koordinata središta kernela
-def prepare_data(inputs, centers, single_std=False):
-	a = []
+def calculate_std(centers, single_std=False):
 	num_clusters = len(centers)
-	stdds = []
+	stds = []
 
 	if not single_std:
 		for i in range(0, num_clusters):
@@ -151,7 +150,7 @@ def prepare_data(inputs, centers, single_std=False):
 			neigh = NearestNeighbors(n_neighbors=p)
 			neigh.fit(centers)
 			distances = neigh.kneighbors(centers[i].reshape(1, -1))[0][0]
-			stdds.append(np.sqrt(np.sum(np.square(distances)))/p)
+			stds.append(np.sqrt(np.sum(np.square(distances)))/p)
 
 	if single_std:
 		'''
@@ -162,7 +161,7 @@ def prepare_data(inputs, centers, single_std=False):
 		for i in range(0, len(centers)-1):
 			distances.append(np.linalg.norm(centers[i]-centers[i+1]))
 
-		stdds = [max(distances)/np.sqrt(2*num_clusters)]
+		stds = [max(distances)/np.sqrt(2*num_clusters)]
 		'''
 		if num_clusters < 2:
 			raise ValueError('Single standard deviation needs at least 2 kernels.')
@@ -172,9 +171,9 @@ def prepare_data(inputs, centers, single_std=False):
 			for j in range(i+1, len(centers)):
 				distances.append(np.linalg.norm(centers[i]-centers[j]))
 
-		stdds = [max(distances)/np.sqrt(2*num_clusters)]
+		stds = [max(distances)/np.sqrt(2*num_clusters)]
 
-	return centers, stdds
+	return stds
 
 
 def analyze(X_train_validate, X_test, y_train_validate, y_test, min_clusters, max_clusters, train_method, q, single_std=False, random_centers=False, normalize=True, print_results=True):
@@ -184,8 +183,6 @@ def analyze(X_train_validate, X_test, y_train_validate, y_test, min_clusters, ma
 	max_clusters = max_clusters
 
 	for i in range(min_clusters, max_clusters+1):
-		if print_results:
-			print("\n\nClusters: " + str(i))
 
 		kf = KFold(n_splits=10, shuffle=True)
 		KFold_validation_MSEs = []
@@ -210,7 +207,7 @@ def analyze(X_train_validate, X_test, y_train_validate, y_test, min_clusters, ma
 					cluster_centers.append(random.choice(X_train))
 
 			cluster_centers = np.array(cluster_centers)
-			c, s = prepare_data(X_train, cluster_centers, single_std=single_std)
+			s = calculate_std(cluster_centers, single_std=single_std)
 
 			s = np.multiply(q, s, dtype=float)
 
@@ -225,8 +222,12 @@ def analyze(X_train_validate, X_test, y_train_validate, y_test, min_clusters, ma
 		test_MSEs.append(np.mean(KFold_test_MSEs))
 
 		if print_results:
+			print("Clusters: " + str(i))
 			print("K-Fold validation MSE: " + str(np.mean(KFold_validation_MSEs)), flush=True)
 			print("K-Fold testing MSE: " + str(np.mean(KFold_test_MSEs)), flush=True)
+			print("\n")
+
+		print("Clusters: " + str(i) + ", q = " + str(q) + " -- done", flush=True)
 
 	return validation_MSEs, test_MSEs
 
