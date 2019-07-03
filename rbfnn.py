@@ -56,11 +56,9 @@ class RBFNN:
 	def rbf(self, x, c, s):
 		x = np.matrix(x)
 		c = np.matrix(c)
+		s = np.array(s)
 		output = np.exp(-(np.square(np.linalg.norm(x - c)) / (2 * np.square(s))))
 
-		if np.isnan(output):
-			print("shit")
-			sys.exit()
 		return output
 
 	# za jedan n-dimenzionalni input vraća outpute skrivenog i izlaznog sloja
@@ -145,18 +143,17 @@ class RBFNN:
 		return mse
 
 
-# pripremanje podataka za mrežu - izračun širina i koordinata središta kernela
 def calculate_std(centers, single_std=False):
-	num_clusters = len(centers)
 	stds = []
+	num_centers = len(centers)
 
 	if not single_std:
-		for i in range(0, num_clusters):
-			p = 2
-			neigh = NearestNeighbors(n_neighbors=p)
-			neigh.fit(centers)
+		p = 2
+		neigh = NearestNeighbors(n_neighbors=p, algorithm='brute', metric='euclidean')
+		neigh.fit(centers)
+		for i in range(0, num_centers):
 			distances = neigh.kneighbors(centers[i].reshape(1, -1))[0][0]
-			val = np.sqrt(np.sum(np.square(distances)))/p
+			val = np.sqrt(np.sum(np.square(distances))/(p-1))
 
 			stds.append(val)
 
@@ -171,7 +168,7 @@ def calculate_std(centers, single_std=False):
 
 		stds = [max(distances)/np.sqrt(2*num_clusters)]
 		'''
-		if num_clusters < 2:
+		if num_centers < 2:
 			raise ValueError('Single standard deviation needs at least 2 kernels.')
 
 		distances = []
@@ -179,12 +176,15 @@ def calculate_std(centers, single_std=False):
 			for j in range(i+1, len(centers)):
 				distances.append(np.linalg.norm(centers[i]-centers[j]))
 
-		stds = [max(distances)/np.sqrt(2*num_clusters)]
+		stds = [max(distances)/np.sqrt(2*num_centers)]
 
-	return stds
+	s = np.array(stds)
+	if np.isin(0, s):
+		print("kek")
+	return np.array(stds)
 
 
-def analyze(X_train_validate, X_test, y_train_validate, y_test, min_clusters, max_clusters, train_method, q, single_std=False, random_centers=False, normalize=True, print_results=True):
+def analyze(X, y, min_clusters, max_clusters, train_method, q, single_std=False, random_centers=False, print_results=True):
 	validation_MSEs = []
 	test_MSEs = []
 	min_clusters = min_clusters
@@ -196,46 +196,44 @@ def analyze(X_train_validate, X_test, y_train_validate, y_test, min_clusters, ma
 		KFold_validation_MSEs = []
 		KFold_test_MSEs = []
 
-		for train_index, test_index in kf.split(X_train_validate):
-			X_train, X_validate = X_train_validate[train_index], X_train_validate[test_index]
-			y_train, y_validate = y_train_validate[train_index], y_train_validate[test_index]
-
-			if normalize:
-				X_train, y_train = min_max_scale(X_train, y_train)
-				X_validate, y_validate = min_max_scale(X_validate, y_validate)
-				X_test, y_test = min_max_scale(X_test, y_test)
+		for train_index, test_index in kf.split(X):
+			X_train, X_validate = X[train_index], X[test_index]
+			y_train, y_validate = y[train_index], y[test_index]
 
 			n_clusters = i
-			cluster_centers = []
 			if not random_centers:
-				kmeans = KMeans(n_clusters=n_clusters).fit(X_train)
+				kmeans = KMeans(n_clusters=n_clusters, init="random").fit(X_train)
 				cluster_centers = kmeans.cluster_centers_
 			else:
-				cluster_centers = random.sample(list(X_test), n_clusters)
+				cluster_centers = random.sample(list(X_train), n_clusters)
 
 			cluster_centers = np.array(cluster_centers)
 			s = calculate_std(cluster_centers, single_std=single_std)
 
 			s = np.multiply(q, s, dtype=float)
+			#print(s, flush=True)
+			#print(cluster_centers, flush=True)
 
 			nn = RBFNN(k=len(cluster_centers), c=cluster_centers, s=s)
 			if not nn.train(X_train, y_train, method=train_method):
 				continue
 
-			KFold_validation_MSEs.append(nn.get_MSE(X_validate, y_validate))
-			KFold_test_MSEs.append(nn.get_MSE(X_test, y_test))
+			MSE = nn.get_MSE(X_validate, y_validate)
+			KFold_validation_MSEs.append(MSE)
+			#KFold_test_MSEs.append(nn.get_MSE(X_test, y_test))
 
+		print(KFold_validation_MSEs)
 		validation_MSEs.append(np.mean(KFold_validation_MSEs))
-		test_MSEs.append(np.mean(KFold_test_MSEs))
+		#test_MSEs.append(np.mean(KFold_test_MSEs))
 
 		if print_results:
 			print("K-Fold validation MSE: " + str(np.mean(KFold_validation_MSEs)), flush=True)
-			print("K-Fold testing MSE: " + str(np.mean(KFold_test_MSEs)), flush=True)
+			#print("K-Fold testing MSE: " + str(np.mean(KFold_test_MSEs)), flush=True)
 
 		print("Clusters: " + str(i) + ", q = " + str(q) + " -- done", flush=True)
 		print("\n")
 
-	return validation_MSEs, test_MSEs
+	return validation_MSEs#, test_MSEs
 
 
 def min_max_scale(x, y):

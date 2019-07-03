@@ -55,10 +55,11 @@ plt.legend()
 plt.show()
 
 '''
+
 n_clusters = 6
 kmeans = KMeans(n_clusters=n_clusters).fit(X)
 
-c, s = rbfnn.prepare_data(X, kmeans.cluster_centers_, single_std=0)
+s = rbfnn.calculate_std(kmeans.cluster_centers_, single_std=0)
 
 # rbfnn
 q = 1
@@ -67,7 +68,7 @@ if q != 1:
 		s[i] = float(s[i])*q
 
 print(s)
-nn = rbfnn.RBFNN(k=n_clusters, c=c, s=s)
+nn = rbfnn.RBFNN(k=n_clusters, c=kmeans.cluster_centers_, s=s)
 nn.train(X, y, method="an")
 
 # print("Clusters: " + str(n_clusters) + ", MSE: " + str(nn.get_MSE(X,y)))

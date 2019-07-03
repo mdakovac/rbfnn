@@ -10,23 +10,28 @@ import matplotlib.pyplot as plt
 # ml algorithms
 import rbfnn as rbfnn
 
+
 # cross-validation
 from sklearn.model_selection import train_test_split
 
+import sys
 
-df = pd.read_csv('data/computer_hardware.csv', header=None)
-df = df[df.columns[2:10]]
+# ucitaj dataset
+df = pd.read_csv('data/Residential-Building-Data-Set.csv').astype(float)
+df.drop_duplicates(subset=df.columns[0:6], inplace=True)
 
-X = np.array(df[df.columns[0:6]])
-y = np.array(df[df.columns[6]])
+# izdvoji ulaze i izlaze
+X = np.array(df[df.columns[0:8]])
+y = np.array(df[df.columns[8]])
 
 
+#cluster range
 min_clusters = 2
 max_clusters = 20
 min_q = 1
 max_q = 2
 single_std = 1
-random_centers = 0
+random_centers = 1
 
 
 cluster_range = range(min_clusters, max_clusters+1)
@@ -49,18 +54,21 @@ for q in q:
 	plt.plot(cluster_range, validation_MSEs, label="q = "+str(q))
 	output_object["MSE, q="+str(q)] = validation_MSEs
 
+# export to excel
+excel_data = pd.DataFrame(output_object)
+excel_data.to_excel(
+	'results/Residential-Building-Data-Set/single_std=' + str(single_std) + '--random_centers=' + str(
+		random_centers) + '.xlsx', sheet_name='sheet1', index=False)
+
 # plot
 #plt.plot(cluster_range, test_MSEs, label="testing")
 plt.xticks(cluster_range)
 #plt.ylim(0, 0.3)
 
-plt.suptitle("Computer Hardware", fontsize=12)
+plt.suptitle("yacht_hydrodynamics", fontsize=12)
 plt.xlabel("Number of kernels")
 plt.ylabel("MSE")
 
 plt.legend()
 plt.show()
 
-# export to excel
-excel_data = pd.DataFrame(output_object)
-excel_data.to_excel('results/computer_hardware/single_std='+str(single_std)+'--random_centers='+str(random_centers)+'.xlsx', sheet_name='sheet1', index=False)
