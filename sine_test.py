@@ -9,7 +9,19 @@ from sklearn.model_selection import train_test_split
 from sklearn.cluster import KMeans
 import rbfnn as rbfnn
 
+import matplotlib.pyplot as plt
+import numpy as np
+import scipy.stats as stats
+import math
 
+mu = 0
+variance = 1
+sigma = math.sqrt(variance)
+x = np.linspace(mu - 3*sigma, mu + 3*sigma, 100)
+plt.plot(x, stats.norm.pdf(x, mu, sigma))
+plt.show()
+
+'''
 # sample inputs and add noise
 NUM_SAMPLES = 300
 X = np.random.uniform(0, 1.5, NUM_SAMPLES)
@@ -19,7 +31,7 @@ noise = np.random.uniform(-0.8, 0.8, NUM_SAMPLES)
 y = 3*np.sin(12*X) + noise
 # y = 15*X + nois#e
 X = X.reshape(-1, 1)
-
+'''
 '''
 # K-fold splitting
 X_train_validate, X_test, y_train_validate, y_test = train_test_split(X, y, shuffle=True, test_size=0.1)
@@ -55,7 +67,7 @@ plt.legend()
 plt.show()
 
 '''
-
+'''
 n_clusters = 6
 kmeans = KMeans(n_clusters=n_clusters).fit(X)
 
@@ -80,3 +92,4 @@ plt.legend()
 
 # plt.tight_layout()
 plt.show()
+'''

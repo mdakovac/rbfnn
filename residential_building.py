@@ -45,7 +45,7 @@ for q in q:
 								    y,
 								    min_clusters,
 								    max_clusters,
-								    train_method="an",
+								    train_method="gd",
 								    q=q,
 								    single_std=single_std,
 								    random_centers=random_centers,
@@ -55,10 +55,10 @@ for q in q:
 	output_object["MSE, q="+str(q)] = validation_MSEs
 
 # export to excel
-excel_data = pd.DataFrame(output_object)
-excel_data.to_excel(
-	'results/Residential-Building-Data-Set/single_std=' + str(single_std) + '--random_centers=' + str(
-		random_centers) + '.xlsx', sheet_name='sheet1', index=False)
+#excel_data = pd.DataFrame(output_object)
+#excel_data.to_excel(
+#	'results/Residential-Building-Data-Set/single_std=' + str(single_std) + '--random_centers=' + str(
+#		random_centers) + '.xlsx', sheet_name='sheet1', index=False)
 
 # plot
 #plt.plot(cluster_range, test_MSEs, label="testing")

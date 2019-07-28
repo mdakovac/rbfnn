@@ -31,7 +31,7 @@ max_clusters = 20
 min_q = 1
 max_q = 2
 single_std = 1
-random_centers = 1
+random_centers = 0
 
 
 cluster_range = range(min_clusters, max_clusters+1)
@@ -45,7 +45,7 @@ for q in q:
 								    y,
 								    min_clusters,
 								    max_clusters,
-								    train_method="an",
+								    train_method="gd",
 								    q=q,
 								    single_std=single_std,
 								    random_centers=random_centers,
@@ -67,5 +67,5 @@ plt.legend()
 plt.show()
 
 # export to excel
-excel_data = pd.DataFrame(output_object)
-excel_data.to_excel('results/real_estate/single_std='+str(single_std)+'--random_centers='+str(random_centers)+'.xlsx', sheet_name='sheet1', index=False)
+#excel_data = pd.DataFrame(output_object)
+#excel_data.to_excel('results/real_estate/single_std='+str(single_std)+'--random_centers='+str(random_centers)+'.xlsx', sheet_name='sheet1', index=False)

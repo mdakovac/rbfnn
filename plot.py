@@ -11,7 +11,7 @@ from sklearn import preprocessing
 
 
 # read data
-df = pd.read_excel('results/airfoil_noise/single_std=1--random_centers=0.xlsx')
+df = pd.read_excel('results/Residential-Building-Data-Set/single_std=0--random_centers=1.xlsx')
 
 x = np.array(df[df.columns[0]])
 q1 = np.array(df[df.columns[1]])
@@ -52,6 +52,10 @@ for i in range(2, 21):
 
 '''
 
+
+plt.rcParams.update({'font.size': 13})
+
+
 # plot
 plt.plot(x, q1, label="q=1.0")
 plt.plot(x, q12, label="q=1.2")
@@ -63,11 +67,11 @@ plt.plot(x, q2, label="q=2.0")
 
 
 plt.xticks(x)
-plt.ylim(0, 1000)
+#plt.ylim(0, 1000)
 
-plt.suptitle("Airfoil Self-Noise", fontsize=12)
-plt.xlabel("Veličina")
-plt.ylabel("MSE")
+plt.suptitle("Airfoil Self-Noise", fontsize=20)
+plt.xlabel("Veličina mreže", fontsize=16)
+plt.ylabel("MSE", fontsize=16)
 
 plt.legend()
 plt.show()

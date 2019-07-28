@@ -66,5 +66,5 @@ plt.legend()
 plt.show()
 
 # export to excel
-excel_data = pd.DataFrame(output_object)
-excel_data.to_excel('results/airfoil_noise/(3)single_std='+str(single_std)+'--random_centers='+str(random_centers)+'.xlsx', sheet_name='sheet1', index=False)
+#excel_data = pd.DataFrame(output_object)
+#excel_data.to_excel('results/airfoil_noise/(3)single_std='+str(single_std)+'--random_centers='+str(random_centers)+'.xlsx', sheet_name='sheet1', index=False)

@@ -163,10 +163,10 @@ def calculate_std(centers, single_std=False):
 		centers = np.sort(centers, axis=None)
 
 		distances = []
-		for i in range(0, len(centers)-1):
+		for i in range(0, num_centers-1):
 			distances.append(np.linalg.norm(centers[i]-centers[i+1]))
 
-		stds = [max(distances)/np.sqrt(2*num_clusters)]
+		stds = [max(distances)/np.sqrt(2*num_centers)]
 		'''
 		if num_centers < 2:
 			raise ValueError('Single standard deviation needs at least 2 kernels.')
@@ -176,11 +176,9 @@ def calculate_std(centers, single_std=False):
 			for j in range(i+1, len(centers)):
 				distances.append(np.linalg.norm(centers[i]-centers[j]))
 
-		stds = [max(distances)/np.sqrt(2*num_centers)]
+		stds = [max(distances)/np.sqrt(num_centers)]
 
 	s = np.array(stds)
-	if np.isin(0, s):
-		print("kek")
 	return np.array(stds)
 
 
@@ -209,7 +207,7 @@ def analyze(X, y, min_clusters, max_clusters, train_method, q, single_std=False,
 
 			cluster_centers = np.array(cluster_centers)
 			s = calculate_std(cluster_centers, single_std=single_std)
-
+			#print(s)
 			s = np.multiply(q, s, dtype=float)
 			#print(s, flush=True)
 			#print(cluster_centers, flush=True)
@@ -222,7 +220,6 @@ def analyze(X, y, min_clusters, max_clusters, train_method, q, single_std=False,
 			KFold_validation_MSEs.append(MSE)
 			#KFold_test_MSEs.append(nn.get_MSE(X_test, y_test))
 
-		print(KFold_validation_MSEs)
 		validation_MSEs.append(np.mean(KFold_validation_MSEs))
 		#test_MSEs.append(np.mean(KFold_test_MSEs))
 
